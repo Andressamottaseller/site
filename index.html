@@ -134,6 +134,7 @@ header{position:sticky;top:0;z-index:30;background:var(--ink);color:#fff;border-
 .form input,.form select,.form textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-top:4px;background:#fff}
 .form textarea{min-height:60px;resize:vertical}
 .dfoot{border-top:1px solid var(--line);padding:14px 20px 16px;background:#fdfbf7}
+.sub{display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);margin-bottom:2px}
 .tot{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
 .tot b{font-size:24px}
 .minbar{height:6px;border-radius:99px;background:#eee;overflow:hidden;margin:6px 0}
@@ -223,6 +224,7 @@ const LOJA = {
   atualizadoEm: "24/10/2026",
   pedidoMinimoPecas: 10,      // quantidade mínima de peças por pedido
   pedidoMinimoValor: 0,       // valor mínimo em R$ (0 = sem mínimo)
+  fretePercentual: 8,         // frete = % do valor dos produtos
   banner: {
     ativo: true,
     etiqueta: "BLACK FRIDAY SIRIUS",
@@ -299,7 +301,7 @@ const PRODUTOS = [{"id":"6ab3caeeeb1f3c0ea65fc7d0","n":"Perfume Afnan 9PM Elixir
         <p style="margin-top:6px">1. Escolha os produtos e adicione ao carrinho<br>2. Pedido mínimo de <span class="minp">10</span> peças<br>3. Preencha seus dados e envie pelo WhatsApp<br>4. Confirmamos estoque, frete e pagamento</p>
       </div>
     </div>
-    <p class="copy">Preços sujeitos a alteração sem aviso prévio e à confirmação de estoque. Frete a combinar. © <span id="yr"></span> Sirius Perfumaria Atacado.</p>
+    <p class="copy">Preços sujeitos a alteração sem aviso prévio e à confirmação de estoque. Frete: 8% do valor do pedido. © <span id="yr"></span> Sirius Perfumaria Atacado.</p>
   </div>
 </footer>
 
@@ -330,7 +332,9 @@ const PRODUTOS = [{"id":"6ab3caeeeb1f3c0ea65fc7d0","n":"Perfume Afnan 9PM Elixir
     </div>
   </div>
   <div class="dfoot">
-    <div class="tot"><span>Total (<span id="itemsN">0</span> peças)</span><b id="total">R$ 0,00</b></div>
+    <div class="sub"><span>Produtos (<span id="itemsN">0</span> peças)</span><span id="subtotal">R$ 0,00</span></div>
+    <div class="sub"><span>Frete (<span id="fretePct">8</span>% do pedido)</span><span id="frete">R$ 0,00</span></div>
+    <div class="tot"><span>Total</span><b id="total">R$ 0,00</b></div>
     <div class="minbar"><i id="minFill" style="width:0"></i></div>
     <div class="warn" id="warn"></div>
     <button class="wa" id="sendWa">
@@ -484,6 +488,7 @@ function closeModal(){ $("#modal").classList.remove("on"); if(!$("#drawer").clas
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeModal(); closeCart(); }});
 
 /* ---------- carrinho ---------- */
+function frete(t){ return Math.round(t*LOJA.fretePercentual)/100; }
 function totals(){ let t=0,n=0; for(const id in cart){ t+=byId[id].p*cart[id]; n+=cart[id]*(byId[id].q||1); } return {t,n}; }
 function renderCart(){
   const ids = Object.keys(cart);
@@ -496,7 +501,8 @@ function renderCart(){
     : `<p style="padding:30px 0;text-align:center;color:var(--muted)">Seu carrinho está vazio.</p>`;
   $("#cartForm").style.display = ids.length? "grid":"none";
   const {t,n}=totals();
-  $("#cartCount").textContent=n; $("#itemsN").textContent=n; $("#total").textContent=brl(t);
+  const fr=frete(t);
+  $("#cartCount").textContent=n; $("#itemsN").textContent=n; $("#subtotal").textContent=brl(t); $("#frete").textContent=brl(fr); $("#total").textContent=brl(t+fr);
   const faltaP = Math.max(0, LOJA.pedidoMinimoPecas - n);
   const faltaV = LOJA.pedidoMinimoValor ? Math.max(0, LOJA.pedidoMinimoValor - t) : 0;
   const prog = LOJA.pedidoMinimoPecas ? Math.min(1, n/LOJA.pedidoMinimoPecas) : 1;
@@ -536,9 +542,10 @@ $("#sendWa").onclick=()=>{
   if(v("fCep")) m += `*CEP:* ${v("fCep")}\n`;
   m += `*Pagamento:* ${v("fPag")}\n\n*Itens:*\n`;
   for(const id in cart){ const p=byId[id]; m += `• ${cart[id]}x ${p.n} — ${brl(p.p)} = ${brl(p.p*cart[id])}\n`; }
-  m += `\n*Total: ${brl(t)}* (${n} peças)\n_Frete a combinar_\n`;
+  const fr=frete(t);
+  m += `\n*Produtos:* ${brl(t)} (${n} peças)\n*Frete (${LOJA.fretePercentual}%):* ${brl(fr)}\n*Total: ${brl(t+fr)}*\n`;
   if(v("fObs")) m += `\n*Obs.:* ${v("fObs")}\n`;
-  m += `\n_Tabela de ${LOJA.atualizadoEm}. Aguardo confirmação de estoque, frete e valores._`;
+  m += `\n_Tabela de ${LOJA.atualizadoEm}. Aguardo confirmação de estoque e valores._`;
   window.open(waLink(m),"_blank");
 };
 
