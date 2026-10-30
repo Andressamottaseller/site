@@ -90,6 +90,8 @@ header{position:sticky;top:0;z-index:30;background:var(--ink);color:#fff;border-
 .add{flex:1;background:var(--ink);color:var(--gold-2);border-radius:10px;font-weight:700;font-size:13.5px;height:40px}
 .add:hover{background:#000}
 .cxline{font-size:12.5px;color:var(--muted);margin-top:2px}
+.faixas{display:flex;flex-wrap:wrap;gap:2px 8px;font-size:11.5px;color:var(--muted);margin-top:3px}.faixas b{color:var(--ink)}
+.dq{color:#1a7f37}.dqh{color:var(--muted);font-size:11.5px}
 .cxline b{color:var(--safira,#0F2A5F)}
 .addcx{width:100%;margin-top:8px;height:36px;border-radius:8px;border:1px solid var(--gold);color:var(--gold-dark);background:#fff;font-weight:700;font-size:12.5px}
 .addcx:hover{background:var(--gold);color:#000}
@@ -439,6 +441,7 @@ function card(p){
         ${p.o?`<div class="old">${brl(p.o)}</div>`:""}
         <div class="price">${brl(p.p)}${p.cx?'<span class="unit"> /un</span>':''}</div>
         ${p.cx?`<div class="cxline">Caixa c/ ${p.cq||12}: <b>${brl(p.cx)}</b> <span>(${brl(p.cx/(p.cq||12))}/un)</span></div>`:""}
+        ${faixasHtml(p)}
       </div>
       <div class="actions">
         <div class="qty"><button data-d="-1" data-id="${p.id}" aria-label="Menos">−</button><input type="number" min="1" value="1" id="q_${p.id}" aria-label="Quantidade"><button data-d="1" data-id="${p.id}" aria-label="Mais">+</button></div>
@@ -485,7 +488,7 @@ function openModal(id){
     <div class="mtxt">
       ${p.m?`<span class="brand">${esc(p.m)}${p.g?" · "+esc(p.g):""}</span>`:""}
       <h3>${esc(p.n)}</h3>
-      <div>${p.o?`<span class="old">${brl(p.o)}</span> `:""}<div class="price">${brl(p.p)}${p.cx?'<span class="unit"> /un</span>':''}</div>${p.cx?`<div class="cxline">Caixa c/ ${p.cq||12}: <b>${brl(p.cx)}</b> <span>(${brl(p.cx/(p.cq||12))}/un)</span></div>`:""}</div>
+      <div>${p.o?`<span class="old">${brl(p.o)}</span> `:""}<div class="price">${brl(p.p)}${p.cx?'<span class="unit"> /un</span>':''}</div>${p.cx?`<div class="cxline">Caixa c/ ${p.cq||12}: <b>${brl(p.cx)}</b> <span>(${brl(p.cx/(p.cq||12))}/un)</span></div>`:""}${faixasHtml(p)}</div>
       ${p.d?`<div class="desc">${esc(p.d)}</div>`:""}
       <div class="actions" style="margin-top:auto">
         <div class="qty"><button data-d="-1" data-m="1" data-id="${p.id}">−</button><input type="number" min="1" value="1" id="m_${p.id}"><button data-d="1" data-m="1" data-id="${p.id}">+</button></div>
@@ -499,14 +502,28 @@ function closeModal(){ $("#modal").classList.remove("on"); if(!$("#drawer").clas
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeModal(); closeCart(); }});
 
 /* ---------- carrinho ---------- */
+/* ---------- desconto por quantidade (mesmo produto) ----------
+   custo = US$ x 5,70 (estimado pelo preço do site, que é custo x 1,45 arredondado até final 9)
+   6+ un: custo x 1,45 · 10+ un: custo x 1,40 · 20+ un: custo x 1,35 (centavos arredondados para cima)
+   Não vale para grife, nicho, caixa fechada e produtos esgotados. */
+const FAIXAS = [[20,1.35],[10,1.40],[6,1.45]];
+const SEM_FAIXA = new Set("abercrombie & fitch|alviero martini|animale|antonio banderas|ariana grande|azzaro|benetton|blauer|boucheron|britney spears|burberry|bvlgari|cacharel|calvin klein|capucci|carolina herrera|cartier|chanel|chloe|christian dior|dior|clinique|coach|david beckham|davidoff|diesel|dolce & gabbana|elie saab|elizabeth arden|escada|faconnable|ferrari|giorgio armani|emporio armani|givenchy|gres|gucci|guerlain|guess|hermes|hugo boss|issey miyake|jacques bogart|jean paul gaultier|jeanne arthes|jennifer lopez|jimmy choo|joop|karl lagerfeld|katy perry|kate moss|kenzo|kylie jenner|lacoste|lancome|lanvin|lapidus|loewe|louis vuitton|marc jacobs|mauboussin|mercedes benz|moncler|montblanc|moschino|mugler|narciso rodriguez|nautica|nina ricci|paco rabanne|rabanne|paris hilton|perry ellis|police|porsche|prada|ralph lauren|replay|rochas|sabrina carpenter|salvatore ferragamo|shakira|shiseido|tiffany|tommy hilfiger|tous|trussardi|valentino|versace|victoria's secret|victorinox|viktor & rolf|women secret|women'secret|yves saint laurent|ysl|nina|tommy|tommy girl|kate spade|amouage|bdk|boadicea the victorious|byredo|clive christian|creed|escentric molecules|essential parfums|etat libre d'orange|ex nihilo|frederic malle|goldfield & banks|initio|jo malone|juliette has a gun|kajal|kayali|kilian|lorenzo pazzaglia|maison crivelli|maison francis kurkdjian|mancera|matiere premiere|memo|montale|nishane|parfums de marly|penhaligon's|roja parfums|rosendo mateu|sospiro|stephane humbert lucas|tiziana terenzi|tom ford|xerjoff".split("|").map(norm));
+const _rxEsc = x => x.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+const SEM_FAIXA_RX = new RegExp("(^|[^a-z0-9])("+[...SEM_FAIXA].map(_rxEsc).join("|")+")($|[^a-z0-9])");
+/* o nome só é conferido quando a marca está vazia ou cortada (ex.: "Body", "Paris", "Karl") */
+const _marcaCortada = m => !m || m==="body" || [...SEM_FAIXA].some(x=>x.startsWith(m+" "));
+function temFaixa(p){ if(!p || p.q || p.cx || p.e) return false; const m=norm(p.m||""); if(SEM_FAIXA.has(m)) return false; return !(_marcaCortada(m) && SEM_FAIXA_RX.test(norm(p.n))); }
+function precoFaixa(p,mg){ const c=(p.p-5)/1.45; return Math.min(p.p, Math.ceil(c*mg - 1e-9)); }
+function precoQtd(p,qtd){ if(temFaixa(p)) for(const [min,mg] of FAIXAS) if(qtd>=min) return precoFaixa(p,mg); return p.p; }
+function faixasHtml(p){ if(!temFaixa(p)) return ""; return `<div class="faixas">${FAIXAS.slice().reverse().map(([min,mg])=>`<span>${min}+ un: <b>${brl(precoFaixa(p,mg))}</b></span>`).join("")}</div>`; }
 function frete(t){ return Math.round(t*LOJA.fretePercentual)/100; }
-function totals(){ let t=0,n=0; for(const id in cart){ t+=byId[id].p*cart[id]; n+=cart[id]*(byId[id].q||1); } return {t,n}; }
+function totals(){ let t=0,n=0; for(const id in cart){ t+=precoQtd(byId[id],cart[id])*cart[id]; n+=cart[id]*(byId[id].q||1); } return {t,n}; }
 function renderCart(){
   const ids = Object.keys(cart);
   $("#cartItems").innerHTML = ids.length? ids.map(id=>{const p=byId[id];return `<div class="citem">
       ${p.f?`<img src="${esc(p.f)}" alt="" onerror="this.style.visibility='hidden'">`:`<span></span>`}
-      <div><div class="n">${esc(p.n)}</div><div class="s">${brl(p.p)} cada</div></div>
-      <div class="t">${brl(p.p*cart[id])}</div>
+      <div><div class="n">${esc(p.n)}</div><div class="s">${(()=>{const u=precoQtd(p,cart[id]);if(u<p.p)return `<s>${brl(p.p)}</s> <b class="dq">${brl(u)} cada</b>`;const nx=temFaixa(p)?FAIXAS.slice().reverse().find(([m])=>m>cart[id]):null;return `${brl(p.p)} cada`+(nx?` <span class="dqh">· ${nx[0]}+ un: ${brl(precoFaixa(p,nx[1]))}</span>`:"");})()}</div></div>
+      <div class="t">${brl(precoQtd(p,cart[id])*cart[id])}</div>
       <div class="row"><div class="qty"><button data-cd="-1" data-id="${id}">−</button><input type="number" min="1" value="${cart[id]}" data-ci="${id}"><button data-cd="1" data-id="${id}">+</button></div>
       <button class="rm" data-rm="${id}">Remover</button></div></div>`;}).join("")
     : `<p style="padding:30px 0;text-align:center;color:var(--muted)">Seu carrinho está vazio.</p>`;
@@ -552,7 +569,7 @@ $("#sendWa").onclick=()=>{
   m += `*Endereço:* ${v("fEnd")}\n*Cidade:* ${v("fCidade")}\n`;
   if(v("fCep")) m += `*CEP:* ${v("fCep")}\n`;
   m += `*Pagamento:* ${v("fPag")}\n\n*Itens:*\n`;
-  for(const id in cart){ const p=byId[id]; m += `• ${cart[id]}x ${p.n} — ${brl(p.p)} = ${brl(p.p*cart[id])}\n`; }
+  for(const id in cart){ const p=byId[id]; const u=precoQtd(p,cart[id]); m += `• ${cart[id]}x ${p.n} — ${brl(u)}${u<p.p?` (desconto ${cart[id]} un; tabela ${brl(p.p)})`:""} = ${brl(u*cart[id])}\n`; }
   const fr=frete(t);
   m += `\n*Produtos:* ${brl(t)} (${n} peças)\n*Frete (${LOJA.fretePercentual}%):* ${brl(fr)}\n*Total: ${brl(t+fr)}*\n`;
   if(v("fObs")) m += `\n*Obs.:* ${v("fObs")}\n`;
