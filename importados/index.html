@@ -222,10 +222,10 @@ const PRODUTOS=[{"c":"Acessórios","t":"Acessório Apple","m":"Apple","n":"Apple
     <div id="itens"></div>
     <form class="form" id="form">
       <h3>Seus dados</h3>
-      <label class="full">Nome ou loja *<input id="fNome" autocomplete="name"></label>
+      <label class="full">Nome e sobrenome *<input id="fNome" autocomplete="name"></label>
       <label class="full">Já é cliente Sírius Perfumaria? *<select id="fCli"><option value="">Selecione</option><option>Sim</option><option>Não</option></select></label>
-      <label>Telefone *<input id="fTel" type="tel" autocomplete="tel"></label>
-      <label>CPF/CNPJ<input id="fDoc"></label>
+      <label>Telefone com DDD *<input id="fTel" type="tel" inputmode="numeric" placeholder="Somente números" autocomplete="tel"></label>
+      <label>CPF ou CNPJ *<input id="fDoc" inputmode="numeric" placeholder="Somente números"></label>
       <label class="full">Endereço *<input id="fEnd" autocomplete="street-address"></label>
       <label>Cidade/UF *<input id="fCid"></label>
       <label>CEP<input id="fCep" autocomplete="postal-code"></label>
@@ -291,7 +291,7 @@ function grade(){
 }
 function totais(){let t=0,n=0;for(const id in cart){t+=byId[id].p*cart[id];n+=cart[id]}return{t,n}}
 function faltando(){
-  const r=[["fNome","nome"],["fCli","se já é cliente Sírius Perfumaria"],["fTel","telefone"],["fEnd","endereço"],["fCid","cidade"],["fEnt","região de entrega"]].filter(([k])=>!$("#"+k).value.trim());
+  const r=[["fNome","nome"],["fCli","se já é cliente Sírius Perfumaria"],["fTel","telefone"],["fDoc","CPF ou CNPJ"],["fEnd","endereço"],["fCid","cidade"],["fEnt","região de entrega"]].filter(([k])=>!$("#"+k).value.trim());
   return r;
 }
 function mensagem(){
@@ -306,6 +306,19 @@ function mensagem(){
   if(LOJA.previa)m+=`\n_TESTE: pedido feito na prévia, com preços de exemplo._`;
   return m+`\n\n_Aguardo confirmação de estoque e valores._`;
 }
+const so=s=>s.replace(/\D/g,"");
+function nomeOk(s){const n=norm(s.trim());if(!/^[a-z'’-]+(\s+[a-z'’-]+)+$/.test(n))return false;const p=n.split(/\s+/);const r=p.filter(w=>!["de","da","do","das","dos","e"].includes(w));if(r.length<2||r.some(w=>w.length<2||!/[aeiouy]/.test(w)||/(.)\1\1/.test(w)))return false;return !p.some(w=>["teste","test","testes","asdf","qwerty","fulano","fulana","ciclano","beltrano","cliente","nome","sobrenome"].includes(w))}
+function cpfOk(c){if(c.length!==11||/^(\d)\1+$/.test(c))return false;for(const t of [9,10]){let s=0;for(let i=0;i<t;i++)s+=+c[i]*(t+1-i);if((s*10)%11%10!==+c[t])return false}return true}
+function cnpjOk(c){if(c.length!==14||/^(\d)\1+$/.test(c))return false;const d=(n)=>{let s=0,p=n-7;for(let i=0;i<n;i++){s+=+c[i]*p--;if(p<2)p=9}const r=s%11;return r<2?0:11-r};return d(12)===+c[12]&&d(13)===+c[13]}
+const DDD="11 12 13 14 15 16 17 18 19 21 22 24 27 28 31 32 33 34 35 37 38 41 42 43 44 45 46 47 48 49 51 53 54 55 61 62 63 64 65 66 67 68 69 71 73 74 75 77 79 81 82 83 84 85 86 87 88 89 91 92 93 94 95 96 97 98 99".split(" ");
+function telOk(t){if(!DDD.includes(t.slice(0,2)))return false;const r=t.slice(2);if(/^(\d)\1+$/.test(r))return false;return (t.length===11&&r[0]==="9")||(t.length===10&&/[2-5]/.test(r[0]))}
+function invalido(){
+  if(!nomeOk($("#fNome").value))return["fNome","Digite seu nome e sobrenome, somente com letras."];
+  if(!telOk($("#fTel").value))return["fTel","Telefone inválido. Digite o DDD e o número, somente números."];
+  const d=$("#fDoc").value;if(!(cpfOk(d)||cnpjOk(d)))return["fDoc","CPF ou CNPJ inválido. Confira os números."];
+  return null;
+}
+["fTel","fDoc"].forEach(k=>{const el=$("#"+k);const f=()=>{let v=so(el.value);if(k==="fTel"&&v.length>11&&v.startsWith("55"))v=v.slice(2);el.value=v.slice(0,k==="fTel"?11:14)};el.addEventListener("input",f);f()});
 function linkEnvio(){$("#enviar").href=`https://wa.me/${LOJA.whatsapp}?text=${encodeURIComponent(mensagem())}`}
 function carrinho(){
   const {t,n}=totais(),ids=Object.keys(cart);
@@ -341,7 +354,8 @@ $("#enviar").addEventListener("click",e=>{
   if(totais().n<LOJA.pedidoMinimoPecas){e.preventDefault();return}
   const temX=Object.keys(cart).some(id=>byId[id].x);
   if(temX&&$("#fCli").value==="Não"&&$("#fCid").value.trim()&&!cidadeOk($("#fCid").value)){e.preventDefault();$("#msg").textContent="Produtos acima de R$ 5.000 são exclusivos para clientes Sírius Perfumaria e moradores das cidades atendidas.";return}
-  const f=faltando();if(f.length){e.preventDefault();$("#msg").textContent=`Preencha: ${f.map(x=>x[1]).join(", ")}.`;$("#"+f[0][0]).focus()}
+  const f=faltando();if(f.length){e.preventDefault();$("#msg").textContent=`Preencha: ${f.map(x=>x[1]).join(", ")}.`;$("#"+f[0][0]).focus();return}
+  const inv=invalido();if(inv){e.preventDefault();$("#msg").textContent=inv[1];$("#"+inv[0]).focus()}
 });
 $("#libCid").insertAdjacentHTML("beforeend",CIDADES.map(c=>`<option>${c}</option>`).join("")+"<option>Outra cidade</option>");
 function abreLib(on){$("#libBox").hidden=!on;$("#ov").hidden=!on&&!$("#dr").classList.contains("on");document.body.classList.toggle("lock",on||$("#dr").classList.contains("on"))}
