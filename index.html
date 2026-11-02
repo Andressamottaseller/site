@@ -216,6 +216,18 @@ footer a{color:var(--gold)}
 .novidade a{background:var(--safira);color:#fff;font-weight:800;text-decoration:none;padding:8px 16px;border-radius:999px;white-space:nowrap}
 .novidade a:hover{background:var(--obsidian)}
 @media (max-width:700px){.novidade .wrap{justify-content:flex-start;font-size:13px}.novidade span{flex:1 1 100%}}
+/* Formas de pagamento e selo de seguranca (rodape) */
+footer .fconf{display:flex;flex-wrap:wrap;gap:24px 64px;justify-content:space-between;margin-top:28px;padding-top:24px;border-top:1px solid rgba(231,215,198,.15)}
+footer .fconf h3{font-size:14px;font-weight:700;color:#fff;margin-bottom:12px}
+footer .pagtos{display:flex;flex-wrap:wrap;gap:8px;list-style:none}
+footer .pagtos li{display:flex;align-items:center;justify-content:center;gap:5px;width:58px;height:38px;background:#fff;border-radius:6px;overflow:hidden}
+footer .pagtos img{display:block;width:100%;height:100%;object-fit:contain}
+footer .pagtos .pix img{width:18px;height:18px}
+footer .pagtos .pix span{font-size:13px;font-weight:700;color:#32BCAD}
+footer .selo{display:flex;align-items:center;gap:10px;color:#fff;line-height:1.15}
+footer .selo svg{width:44px;height:50px;flex:none}
+footer .selo small{display:block;font-size:10px;letter-spacing:.08em;color:#cfc6b6;text-transform:uppercase}
+footer .selo b{display:block;font-size:16px;margin:2px 0;text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -309,6 +321,26 @@ const PRODUTOS = [{"id":"6ab3caeeeb1f3c0ea65fc7d0","n":"Perfume Afnan 9PM Elixir
       <div>
         <p><b style="color:#fff">Como comprar</b></p>
         <p style="margin-top:6px">1. Escolha os produtos e adicione ao carrinho<br>2. Pedido mínimo de <span class="minp">10</span> peças<br>3. Preencha seus dados e envie pelo WhatsApp<br>4. Confirmamos estoque, frete e pagamento</p>
+      </div>
+    </div>
+    <div class="fconf">
+      <div>
+        <h3>Formas de pagamento</h3>
+        <ul class="pagtos">
+          <li><img src="img/pag-visa.svg" alt="Visa" width="58" height="38" loading="lazy"></li>
+          <li><img src="img/pag-mastercard.svg" alt="Mastercard" width="58" height="38" loading="lazy"></li>
+          <li><img src="img/pag-elo.svg" alt="Elo" width="58" height="38" loading="lazy"></li>
+          <li><img src="img/pag-diners.svg" alt="Diners Club" width="58" height="38" loading="lazy"></li>
+          <li><img src="img/pag-amex.svg" alt="American Express" width="58" height="38" loading="lazy"></li>
+          <li class="pix"><img src="img/pag-pix.svg" alt="" width="18" height="18" loading="lazy"><span>Pix</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Selos de segurança</h3>
+        <div class="selo">
+          <svg viewBox="0 0 44 50" aria-hidden="true"><path d="M22 1 42 8v16c0 12-8 20-20 25C10 44 2 36 2 24V8z" fill="#1fa855"/><path d="M22 7 36 12v12c0 8-5 14-14 18C13 38 8 32 8 24V12z" fill="#0B0B0F"/><path d="m14 25 6 6 11-13" fill="none" stroke="#1fa855" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div><small>Compra segura</small><b>Site protegido</b><small>Certificado SSL</small></div>
+        </div>
       </div>
     </div>
     <p class="copy">Preços sujeitos a alteração sem aviso prévio e à confirmação de estoque. Os nomes, descrições e imagens dos produtos podem conter erros de digitação ou diferenças em relação ao produto. Consulte o vendedor antes de finalizar a compra. Frete: 8% do valor do pedido. © <span id="yr"></span> Sirius Perfumaria Atacado.</p>
