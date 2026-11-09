@@ -210,12 +210,6 @@ footer a{color:var(--gold)}
 .chip.hot{border-color:var(--gold);color:var(--gold-dark)}
 .chip.hot.on{background:var(--oud);color:var(--gold-2);border-color:var(--oud)}
 @media (max-width:700px){ .logo img{height:40px} .logo .txt b{font-size:16px} .logo .txt b.b2{font-size:11.5px} .cartbtn .lbl{display:none} }
-.novidade{background:linear-gradient(90deg,var(--gold-dark),var(--gold-2) 50%,var(--gold-dark));color:var(--obsidian)}
-.novidade .wrap{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 16px;padding-top:9px;padding-bottom:9px;font-size:14px;line-height:1.3}
-.novidade b.t{background:var(--obsidian);color:var(--gold-2);font-size:11px;letter-spacing:1.5px;padding:3px 8px;border-radius:4px}
-.novidade a{background:var(--safira);color:#fff;font-weight:800;text-decoration:none;padding:8px 16px;border-radius:999px;white-space:nowrap}
-.novidade a:hover{background:var(--obsidian)}
-@media (max-width:700px){.novidade .wrap{justify-content:flex-start;font-size:13px}.novidade span{flex:1 1 100%}}
 /* Formas de pagamento e selo de seguranca (rodape) */
 footer .fconf{display:flex;flex-wrap:wrap;gap:24px 64px;justify-content:space-between;margin-top:28px;padding-top:24px;border-top:1px solid rgba(231,215,198,.15)}
 footer .fconf h3{font-size:14px;font-weight:700;color:#fff;margin-bottom:12px}
@@ -276,7 +270,6 @@ const PRODUTOS = [{"id":"6ab3caeeeb1f3c0ea65fc7d0","n":"Perfume Afnan 9PM Elixir
 const _agoraPromo=Date.now();PRODUTOS.forEach(p=>{if(p.o&&!(p.pu>_agoraPromo)){delete p.o;delete p.pd;delete p.pu}}); /* promoção vale no máximo 24 horas */
 </script>
 
-<div class="novidade"><div class="wrap"><b class="t">NOVIDADE</b><span><b>A Sírius agora tem eletrônicos, com frete grátis para o oeste do Paraná!</b> Outras regiões: envie junto com sua perfumaria.</span><a href="/importados/">Ver celulares e eletrônicos →</a></div></div>
 <header>
   <div class="wrap hbar">
     <a class="logo" href="#">
