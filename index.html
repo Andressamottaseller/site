@@ -235,6 +235,51 @@ footer .selo b{display:block;font-size:16px;margin:2px 0;text-transform:uppercas
 .pdia-c .pn{font-size:12px;line-height:1.25;height:45px;overflow:hidden;margin:2px 0 6px}
 .pdia-c .po{font-size:12px;color:var(--muted);text-decoration:line-through;margin-top:auto}
 .pdia-c .pp{font-size:18px;font-weight:800;color:var(--red);line-height:1.15}
+
+/* ---------- pedido rápido e barra do carrinho ---------- */
+.prf{background:var(--safira);color:#fff}
+.prf .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:12px;padding-bottom:12px;flex-wrap:wrap}
+.prf p{margin:0;font-size:14.5px;line-height:1.35}
+.prf p b{color:var(--gold-2)}
+.prbtn{background:var(--gold);color:var(--ink);font-weight:800;padding:11px 20px;border-radius:999px;font-size:15px;white-space:nowrap}
+.prbtn:hover{background:var(--gold-2)}
+.prm{position:fixed;inset:0;z-index:58;display:none;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto}
+.prm.on{display:flex}
+.prm .bg{position:fixed;inset:0;background:rgba(0,0,0,.55)}
+.prbox{position:relative;background:#fff;border-radius:18px;max-width:640px;width:100%;padding:20px;display:grid;gap:14px;margin:auto 0}
+.prbox h2{margin:0;font-size:20px;color:var(--ink)}
+.prbox .x{position:absolute;top:10px;right:12px;font-size:28px;line-height:1;color:var(--muted);padding:4px 8px}
+.prbox p{margin:0;color:var(--muted);font-size:14px}
+.prbox textarea{width:100%;min-height:170px;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px;resize:vertical}
+.prex{font-size:13px;color:var(--muted);background:var(--bg);border-radius:10px;padding:10px 12px;line-height:1.5}
+.prgo{background:var(--ink);color:var(--gold-2);font-weight:800;padding:14px;border-radius:12px;font-size:15.5px;width:100%}
+.prgo:disabled{opacity:.5;cursor:not-allowed}
+.prsec{background:none;color:var(--safira);font-weight:700;text-decoration:underline;padding:6px;justify-self:center}
+.prl{display:grid;gap:10px}
+.pri{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:8px}
+.pri.no{background:#fff7f5;border-color:#f0c9c0}
+.pri .esc{font-size:12.5px;color:var(--muted)}
+.pri .lin{display:grid;grid-template-columns:70px minmax(0,1fr);gap:8px;align-items:center}
+.pri input[type=number]{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px;text-align:center;font-size:16px}
+.pri select{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;padding:9px;font-size:14px;background:#fff}
+.pri .nome{font-weight:700;font-size:14.5px;color:var(--ink);line-height:1.3}
+.pri .nome span{display:block;font-weight:600;color:var(--safira);font-size:13.5px;margin-top:2px}
+.pri .nao{font-size:13.5px;color:var(--red);font-weight:600}
+.prres{font-size:14px;color:var(--ink);font-weight:600}
+.cbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--ink);color:#fff;transform:translateY(110%);transition:transform .25s;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -8px 24px rgba(0,0,0,.2)}
+.cbar.on{transform:none}
+.cbar .wrap{display:flex;align-items:center;gap:12px;padding-top:10px;padding-bottom:10px}
+.cbar .info{flex:1;min-width:0;display:grid;gap:4px}
+.cbar .l1{font-weight:700;font-size:15px}
+.cbar .l1 span{color:var(--gold-2)}
+.cbar .l2{font-size:12.5px;color:#d9d2c8}
+.cbar .l2.ok{color:#8fe0a6}
+.cbar .mb{height:5px;border-radius:99px;background:#333;overflow:hidden;max-width:260px}
+.cbar .mb i{display:block;height:100%;background:var(--gold);transition:width .3s}
+.cbar button{background:var(--gold);color:var(--ink);font-weight:800;padding:12px 18px;border-radius:999px;white-space:nowrap;font-size:15px}
+body.comcarrinho .fab{bottom:96px}
+body.comcarrinho .toast{bottom:100px}
+body.comcarrinho footer{padding-bottom:80px}
 </style>
 </head>
 <body>
@@ -287,6 +332,13 @@ const _agoraPromo=Date.now();PRODUTOS.forEach(p=>{if(p.o&&!(p.pu>_agoraPromo)){d
     </button>
   </div>
 </header>
+
+<section class="prf" aria-label="Pedido rápido">
+  <div class="wrap">
+    <p><b>Já sabe o que quer?</b> Escreva ou cole sua lista e monte o pedido em um minuto.</p>
+    <button class="prbtn" id="prAbrir" type="button">Pedido rápido</button>
+  </div>
+</section>
 
 <section class="pdia" id="pdia" hidden aria-label="Promoções do dia">
   <div class="wrap">
@@ -655,6 +707,142 @@ let tt; function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.
   const q=u.get("busca"); if(q) $("#q").value=q;
 }catch(e){} })();
 renderFilters(); renderGrid(); renderCart();
+</script>
+
+<div class="prm" id="prm" role="dialog" aria-modal="true" aria-labelledby="prTit">
+  <div class="bg" data-prfechar></div>
+  <div class="prbox">
+    <button class="x" type="button" data-prfechar aria-label="Fechar">×</button>
+    <div id="prPasso1" style="display:grid;gap:14px">
+      <h2 id="prTit">Pedido rápido</h2>
+      <p>Escreva um produto por linha, com a quantidade na frente. Pode colar a lista do jeito que você mandaria no WhatsApp.</p>
+      <textarea id="prTexto" aria-label="Sua lista de produtos" placeholder="6 Asad Lattafa&#10;3 Yara&#10;12 Brand Collection 123&#10;2 Khamrah"></textarea>
+      <button class="prgo" type="button" id="prBuscar">Encontrar os produtos</button>
+    </div>
+    <div id="prPasso2" style="display:none;gap:14px">
+      <h2>Confira seu pedido</h2>
+      <p>Encontramos os produtos abaixo. Se algum estiver errado, escolha outro na lista.</p>
+      <div class="prl" id="prLista"></div>
+      <div class="prres" id="prRes"></div>
+      <button class="prgo" type="button" id="prColocar">Colocar no carrinho</button>
+      <button class="prsec" type="button" id="prVoltar">Voltar e editar a lista</button>
+    </div>
+  </div>
+</div>
+
+<div class="cbar" id="cbar" aria-live="polite">
+  <div class="wrap">
+    <div class="info">
+      <div class="l1" id="cbL1"></div>
+      <div class="mb"><i id="cbMb"></i></div>
+      <div class="l2" id="cbL2"></div>
+    </div>
+    <button type="button" id="cbVer">Ver pedido</button>
+  </div>
+</div>
+
+<script>
+/* ---------- pedido rápido: o cliente escreve a lista e o site acha os produtos ---------- */
+(function(){
+  const PARE = new Set(["perfume","perfumes","de","da","do","eau","parfum","edp","edt","e","o","a","un","und","unid","unidade","unidades","x","pc","pcs","peca","pecas"]);
+  const OUTRA_LINHA = ["kit","body","splash","mist","deo","desodorante","creme","miniatura","hair","oleo","sabonete","locao","caixa"];
+  const GENERICO = /^(\d+ml|masculino|feminino|unissex|unisex|toilette|cologne|extrait|men|women|homme|femme)$/;
+  const toks = t => norm(t).replace(/(\d+)\s*ml\b/g,"$1ml").split(/[^a-z0-9]+/).filter(w=>w && !PARE.has(w));
+  function lerLinha(bruta){
+    let s = String(bruta).replace(/^[\s•·*\-–—]+/,"").replace(/[*_]/g,"").replace(/\s*[—–-]?\s*R\$\s*[\d.,]+.*$/i,"").replace(/\s+/g," ").trim();
+    if (!s || s.length < 2) return null;
+    let q = 1, m;
+    if ((m = s.match(/^(\d{1,3})\s*x\s*(.+)$/i))) { q = +m[1]; s = m[2]; }
+    else if ((m = s.match(/^(\d{1,3})\s*(?:unidades|unidade|unid|und|un|pecas|peças|peca|peça|pcs|pc|caixas|caixa|cx)\.?\s+(.+)$/i))) { q = +m[1]; s = m[2]; }
+    else if ((m = s.match(/^(\d{1,2})\s+(.+)$/))) { q = +m[1]; s = m[2]; }
+    else if ((m = s.match(/^(.+?)\s*[-:]?\s*(?:x|qtd\.?|quantidade)?\s*(\d{1,3})\s*(un|und|unid|unidades?|pcs?|pe[cç]as?)\.?$/i))) { q = +m[2]; s = m[1]; }
+    else if ((m = s.match(/^(.+?)\s+x\s*(\d{1,3})$/i))) { q = +m[2]; s = m[1]; }
+    return { q: Math.max(1, q), txt: s.trim() };
+  }
+  function buscar(txt){
+    const t = toks(txt); if (!t.length) return [];
+    const outra = t.some(w => OUTRA_LINHA.includes(w));
+    const r = [];
+    for (const p of PRODUTOS){
+      let hit = 0; for (const w of t) if (p._s.includes(w)) hit++;
+      const nota = hit / t.length;
+      if (nota < 0.67) continue;
+      const ehPerf = /^perfume /i.test(p.n);
+      // Menos palavras a mais no nome = mais perto do que o cliente escreveu (Yara antes de Yara Tous).
+      if (!p._t) p._t = toks(p.n).filter(w => !GENERICO.test(w));
+      const extra = p._t.filter(w => !t.includes(w)).length;
+      const pt = nota * 10 + (!outra && ehPerf ? 1.5 : 0) + (p.e ? -5 : 0) - extra * 0.4;
+      r.push([pt, p]);
+    }
+    r.sort((a,b)=>b[0]-a[0]);
+    return r.slice(0,6).map(x=>x[1]);
+  }
+  let achados = [];
+  const abrir = () => { $("#prm").classList.add("on"); document.body.classList.add("lock"); passo(1); setTimeout(()=>$("#prTexto").focus(),50); };
+  const fechar = () => { $("#prm").classList.remove("on"); if(!$("#drawer").classList.contains("on") && !$("#modal").classList.contains("on")) document.body.classList.remove("lock"); };
+  function passo(n){ $("#prPasso1").style.display = n===1?"grid":"none"; $("#prPasso2").style.display = n===2?"grid":"none"; }
+  function resumo(){
+    let n=0,t=0,nao=0;
+    achados.forEach((a,i)=>{ const sel=document.getElementById("prS"+i), qi=document.getElementById("prQ"+i);
+      const nm=document.getElementById("prN"+i);
+      if(!sel || sel.value===""){ nao++; if(nm) nm.textContent="Vai como observação no pedido"; return; }
+      const p=byId[sel.value], q=Math.max(1,parseInt(qi.value)||1); n+=q*(p.q||1); t+=precoQtd(p,q)*q;
+      if(nm) nm.innerHTML=`${esc(p.n)}<span>${q} × ${brl(precoQtd(p,q))}</span>`; });
+    $("#prRes").textContent = `${n} peça${n!==1?"s":""} · ${brl(t)}` + (nao?` · ${nao} item${nao>1?"s":""} sem produto (vai como observação)`:"");
+    $("#prColocar").disabled = !n && !nao;
+  }
+  function mostrar(){
+    $("#prLista").innerHTML = achados.map((a,i)=>{
+      const op = a.ops.map((p,k)=>`<option value="${esc(p.id)}"${k===0?" selected":""}${p.e?" disabled":""}>${esc(p.n.replace(/^Perfume /i,""))} — ${brl(p.p)}${p.e?" (esgotado)":""}</option>`).join("");
+      return `<div class="pri${a.ops.length?"":" no"}">
+        <div class="esc">Você escreveu: ${esc(a.q)} ${esc(a.txt)}</div>
+        ${a.ops.length ? `<div class="nome" id="prN${i}"></div><div class="lin"><input type="number" min="1" id="prQ${i}" value="${a.q}" aria-label="Quantidade"><select id="prS${i}" aria-label="Produto">${op}<option value="">Nenhum destes (vai como observação)</option></select></div><div class="esc">Produto errado? Troque na lista acima.</div>`
+          : `<div class="nao">Não encontramos este produto no site. Ele vai como observação no pedido.</div>`}
+      </div>`; }).join("");
+    resumo(); passo(2); $("#prm").scrollTop = 0;
+  }
+  $("#prAbrir").addEventListener("click", abrir);
+  $("#prm").addEventListener("click", e => { if (e.target.closest("[data-prfechar]")) fechar(); });
+  document.addEventListener("keydown", e => { if (e.key==="Escape" && $("#prm").classList.contains("on")) fechar(); });
+  $("#prBuscar").addEventListener("click", () => {
+    const linhas = $("#prTexto").value.split(/\r?\n/).map(lerLinha).filter(Boolean);
+    if (!linhas.length) { $("#prTexto").focus(); return; }
+    achados = linhas.map(l => ({ ...l, ops: buscar(l.txt) }));
+    mostrar();
+  });
+  $("#prVoltar").addEventListener("click", () => passo(1));
+  $("#prLista").addEventListener("input", resumo);
+  $("#prLista").addEventListener("change", resumo);
+  $("#prColocar").addEventListener("click", () => {
+    const nao = [];
+    achados.forEach((a,i)=>{ const sel=document.getElementById("prS"+i);
+      if (!sel || sel.value===""){ nao.push(`${a.q}x ${a.txt}`); return; }
+      const q = Math.max(1, parseInt(document.getElementById("prQ"+i).value) || 1);
+      cart[sel.value] = (cart[sel.value]||0) + q; });
+    save(); renderCart();
+    if (nao.length){ const o=$("#fObs"); o.value = [o.value.trim(), "Não achei no site: " + nao.join("; ")].filter(Boolean).join("\n"); }
+    $("#prTexto").value = ""; fechar(); openCart();
+  });
+})();
+
+/* ---------- barra do carrinho no rodapé da tela ---------- */
+(function(){
+  function barra(){
+    const n0 = Object.keys(cart).length, {t,n} = totals(), min = LOJA.pedidoMinimoPecas || 0;
+    $("#cbar").classList.toggle("on", n0 > 0);
+    document.body.classList.toggle("comcarrinho", n0 > 0);
+    if (!n0) return;
+    $("#cbL1").innerHTML = `${n} peça${n!==1?"s":""} · <span>${brl(t)}</span>`;
+    const falta = Math.max(0, min - n);
+    $("#cbMb").style.width = (min ? Math.min(100, n / min * 100) : 100) + "%";
+    $("#cbL2").textContent = falta ? `Faltam ${falta} peça${falta>1?"s":""} para o pedido mínimo de ${min}` : "Pedido mínimo atingido";
+    $("#cbL2").className = "l2" + (falta ? "" : " ok");
+  }
+  const original = renderCart;
+  renderCart = function(){ original(); barra(); };
+  $("#cbVer").addEventListener("click", openCart);
+  barra();
+})();
 </script>
 </body>
 </html>
