@@ -471,6 +471,54 @@ const byId = Object.fromEntries(PRODUTOS.map(p=>[p.id,p]));
 PRODUTOS.forEach(p=>{ if(p.cx){ const q=p.cq||12; byId[p.id+"~cx"]={...p,id:p.id+"~cx",n:`${p.n} — Caixa fechada c/ ${q} un`,p:p.cx,q}; } });
 PRODUTOS.forEach(p=>p._s = norm(`${p.n} ${p.m} ${p.g||""} ${p.t} ${p.d||""}`));
 const PAGE = 48;
+
+/* ---------- busca que entende nomes escritos errado ----------
+   "iara" acha Yara, "kamrah" acha Khamrah, "lataffa" acha Lattafa, "clube de nuit" acha Club de Nuit. */
+const fon = w => w.replace(/ph/g,"f").replace(/th/g,"t").replace(/[cs]h/g,"x").replace(/qu/g,"k").replace(/c(?=[eiy])/g,"s").replace(/c/g,"k")
+  .replace(/y/g,"i").replace(/w/g,"v").replace(/z/g,"s").replace(/h/g,"").replace(/(.)\1+/g,"$1");
+function distancia(a,b,max){
+  if (Math.abs(a.length-b.length) > max) return max+1;
+  let ant = Array.from({length:b.length+1},(_,j)=>j), ant2 = null;
+  for (let i=1;i<=a.length;i++){
+    const cur=[i]; let menor=i;
+    for (let j=1;j<=b.length;j++){
+      let d = Math.min(ant[j]+1, cur[j-1]+1, ant[j-1]+(a[i-1]===b[j-1]?0:1));
+      if (ant2 && i>1 && j>1 && a[i-1]===b[j-2] && a[i-2]===b[j-1]) d = Math.min(d, ant2[j-2]+1);
+      cur.push(d); if (d<menor) menor=d;
+    }
+    if (menor > max) return max+1;
+    ant2 = ant; ant = cur;
+  }
+  return ant[b.length];
+}
+const PALAVRAS = (()=>{ const m=new Map(); PRODUTOS.forEach(p=>{ p._w = new Set(p._s.split(/[^a-z0-9]+/).filter(Boolean)); p._w.forEach(w=>{ if(!m.has(w)) m.set(w,fon(w)); }); }); return m; })();
+const _cacheBusca = new Map();
+/* Para cada palavra digitada: se ela aparece em algum produto, vale como sempre.
+   Se não aparece, procura as palavras mais parecidas (mesmo som ou 1–2 letras trocadas). */
+function entender(w){
+  if (_cacheBusca.has(w)) return _cacheBusca.get(w);
+  let r;
+  // Vale como escrita certa quando alguma palavra do site começa assim (ou o número aparece no nome).
+  if (PALAVRAS.has(w) || [...PALAVRAS.keys()].some(v=>v.startsWith(w)) || (/^\d+$/.test(w) && [...PALAVRAS.keys()].some(v=>v.includes(w)))) r = {exata:true};
+  else {
+    const fw = fon(w), tol = fw.length<=3 ? 0 : fw.length<=5 ? 1 : 2;
+    let melhor = tol+1, cand = [];
+    for (const [v,fv] of PALAVRAS){
+      let d = fv===fw || (fw.length>=3 && fv.startsWith(fw)) ? 0 : distancia(fw,fv,tol);
+      if (d>tol && fw.length>=5 && fv.length>fw.length && distancia(fw, fv.slice(0,fw.length), 1)<=1) d = 1;
+      if (d<melhor){ melhor=d; cand=[v]; } else if (d===melhor && d<=tol) cand.push(v);
+    }
+    r = cand.length ? {exata:false, cand:new Set(cand)} : {exata:false, cand:null};
+  }
+  _cacheBusca.set(w,r); return r;
+}
+/* devolve uma função que diz se o produto tem a palavra (exata ou parecida); null quando a palavra não ajuda */
+function testePalavra(w){
+  const e = entender(w);
+  if (e.exata) return p => p._s.includes(w);
+  if (!e.cand) return null;
+  return p => { for (const c of e.cand) if (p._w.has(c)) return true; return false; };
+}
 let shown = PAGE;
 
 /* ---------- carrinho ---------- */
@@ -539,7 +587,10 @@ $("#fPag").innerHTML = LOJA.pagamentos.map(p=>`<option>${esc(p)}</option>`).join
 
 function lista(){
   const q = norm($("#q").value.trim()).split(/\s+/).filter(Boolean);
-  let l = PRODUTOS.filter(p => filtro.f(p) && (!marca || p.m===marca) && q.every(w=>p._s.includes(w)));
+  const testes = [], parecido = [], ignorado = [];
+  q.forEach(w=>{ const t=testePalavra(w); if(t){ testes.push(t); if(!entender(w).exata) parecido.push(w); } else ignorado.push(w); });
+  lista.aviso = parecido.length || ignorado.length ? { parecido, ignorado } : null;
+  let l = q.length && !testes.length ? [] : PRODUTOS.filter(p => filtro.f(p) && (!marca || p.m===marca) && testes.every(t=>t(p)));
   const s = $("#sort").value;
   l.sort((a,b)=> (a.e?1:0)-(b.e?1:0) ||
     (s==="menor"? a.p-b.p : s==="maior"? b.p-a.p :
@@ -571,7 +622,10 @@ function card(p){
 }
 function renderGrid(){
   const l = lista();
-  $("#countInfo").textContent = `${l.length} produto${l.length!==1?"s":""}`;
+  const av = lista.aviso;
+  $("#countInfo").textContent = `${l.length} produto${l.length!==1?"s":""}` +
+    (av && av.parecido.length ? ` · mostrando nomes parecidos com "${av.parecido.join(" ")}"` : "") +
+    (av && av.ignorado.length ? ` · não encontramos "${av.ignorado.join(" ")}"` : "");
   $("#grid").innerHTML = l.length ? l.slice(0,shown).map(card).join("")
     : `<div class="empty">Nenhum produto encontrado.<br>Fale com a gente no WhatsApp que verificamos para você.</div>`;
   $("#more").style.display = l.length>shown ? "block":"none";
@@ -762,9 +816,10 @@ renderFilters(); renderGrid(); renderCart();
   function buscar(txt){
     const t = toks(txt); if (!t.length) return [];
     const outra = t.some(w => OUTRA_LINHA.includes(w));
+    const tst = {}; const teste = w => (w in tst) ? tst[w] : (tst[w] = testePalavra(w));
     const r = [];
     for (const p of PRODUTOS){
-      let hit = 0; for (const w of t) if (p._s.includes(w)) hit++;
+      let hit = 0; for (const w of t) { const f = teste(w); if (f && f(p)) hit++; }
       const nota = hit / t.length;
       if (nota < 0.67) continue;
       const ehPerf = /^perfume /i.test(p.n);
