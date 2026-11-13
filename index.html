@@ -515,7 +515,12 @@ function entender(w){
 /* devolve uma função que diz se o produto tem a palavra (exata ou parecida); null quando a palavra não ajuda */
 function testePalavra(w){
   const e = entender(w);
-  if (e.exata) return p => p._s.includes(w);
+  if (e.exata){
+    // Palavra certa, mas com 6+ letras: aceita também nomes quase iguais ("savage" mostra Sauvage também).
+    const fw = fon(w); if (fw.length < 6) return p => p._s.includes(w);
+    if (!e.viz){ e.viz = new Set(); for (const [v,fv] of PALAVRAS) if (v!==w && Math.abs(fv.length-fw.length)<=1 && distancia(fw,fv,1)<=1) e.viz.add(v); }
+    return p => { if (p._s.includes(w)) return true; for (const c of e.viz) if (p._w.has(c)) return true; return false; };
+  }
   if (!e.cand) return null;
   return p => { for (const c of e.cand) if (p._w.has(c)) return true; return false; };
 }
