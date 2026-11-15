@@ -280,6 +280,23 @@ footer .selo b{display:block;font-size:16px;margin:2px 0;text-transform:uppercas
 body.comcarrinho .fab{bottom:96px}
 body.comcarrinho .toast{bottom:100px}
 body.comcarrinho footer{padding-bottom:80px}
+
+/* ---------- rastrear entrega ---------- */
+.prbts{display:flex;gap:8px;flex-wrap:wrap}
+.prbtn.sec{background:transparent;color:#fff;border:1.5px solid var(--gold-2)}
+.prbtn.sec:hover{background:rgba(255,255,255,.08)}
+.rtf{display:grid;gap:12px}
+.rtf label{display:grid;gap:5px;font-size:13px;font-weight:700;color:var(--ink)}
+.rtf input{border:1px solid var(--line);border-radius:10px;padding:12px;font-size:16px;width:100%}
+.rtmsg{color:var(--red);font-size:13.5px;font-weight:600;min-height:1em;margin:0}
+.rtpasso{display:grid;gap:10px}
+.rtf[hidden],.rtpasso[hidden]{display:none}
+.rtv{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.rtv small{display:block;color:var(--muted);font-size:12px;font-weight:600}
+.rtv b{font-size:18px;letter-spacing:.02em;font-variant-numeric:tabular-nums;color:var(--ink);overflow-wrap:anywhere}
+.rtv button{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:700;color:var(--safira);white-space:nowrap}
+.rtgo{display:block;text-align:center;background:#0b5a2e;color:#fff;font-weight:800;padding:14px;border-radius:12px;font-size:15.5px;text-decoration:none}
+.rtgo:hover{background:#0a4a26}
 </style>
 </head>
 <body>
@@ -336,7 +353,7 @@ const _agoraPromo=Date.now();PRODUTOS.forEach(p=>{if(p.o&&!(p.pu>_agoraPromo)){i
 <section class="prf" aria-label="Pedido rápido">
   <div class="wrap">
     <p><b>Já sabe o que quer?</b> Escreva ou cole sua lista e monte o pedido em um minuto.</p>
-    <button class="prbtn" id="prAbrir" type="button">Pedido rápido</button>
+    <div class="prbts"><button class="prbtn" id="prAbrir" type="button">Pedido rápido</button><button class="prbtn sec" id="rtAbrir" type="button">Rastrear entrega</button></div>
   </div>
 </section>
 
@@ -388,6 +405,7 @@ const _agoraPromo=Date.now();PRODUTOS.forEach(p=>{if(p.o&&!(p.pu>_agoraPromo)){i
         <p style="margin-top:6px">WhatsApp: <a id="fWa" target="_blank" rel="noopener">(45) 99954-7991</a></p>
         <p>Instagram: <a id="fIg" target="_blank" rel="noopener">@perfumariasirius</a></p>
         <p><a href="/pedidos/">Acompanhar meus pedidos</a></p>
+        <p><a href="#rastreio" id="rtRodape">Rastrear entrega na transportadora</a></p>
       </div>
       <div>
         <p><b style="color:#fff">Como comprar</b></p>
@@ -902,6 +920,63 @@ renderFilters(); renderGrid(); renderCart();
   renderCart = function(){ original(); barra(); };
   $("#cbVer").addEventListener("click", openCart);
   barra();
+})();
+</script>
+
+<div class="prm" id="rtm" role="dialog" aria-modal="true" aria-labelledby="rtTit">
+  <div class="bg" data-rtfechar></div>
+  <div class="prbox">
+    <button class="x" type="button" data-rtfechar aria-label="Fechar">×</button>
+    <h2 id="rtTit">Rastrear entrega</h2>
+    <form class="rtf" id="rtForm" novalidate>
+      <p>Seu pedido é entregue pela transportadora <b>Princesa dos Campos</b>. Informe os dados da nota fiscal que veio com o pedido.</p>
+      <label>CPF ou CNPJ da nota fiscal<input id="rtDoc" inputmode="numeric" autocomplete="off" placeholder="Somente números"></label>
+      <label>Nº da nota fiscal<input id="rtNf" inputmode="numeric" autocomplete="off" placeholder="Ex.: 001234"></label>
+      <p class="rtmsg" id="rtMsg" role="alert"></p>
+      <button class="prgo" type="submit">Rastrear entrega</button>
+    </form>
+    <div class="rtpasso" id="rtPasso2" hidden>
+      <p>Abra o site da transportadora e, em <b>Rastrear entrega</b>, cole os dois números abaixo.</p>
+      <div class="rtv"><div><small>CPF ou CNPJ (apenas números)</small><b id="rtDocV"></b></div><button type="button" data-rtcopia="rtDocV">Copiar</button></div>
+      <div class="rtv"><div><small>Nº da nota fiscal</small><b id="rtNfV"></b></div><button type="button" data-rtcopia="rtNfV">Copiar</button></div>
+      <a class="rtgo" href="https://encomendas.princesadoscampos.com.br/" target="_blank" rel="noopener">Abrir rastreio da Princesa dos Campos</a>
+      <button class="prsec" type="button" id="rtVoltar">Corrigir os números</button>
+    </div>
+  </div>
+</div>
+<script>
+/* ---------- rastrear entrega na transportadora ---------- */
+(function(){
+  const so = v => String(v||"").replace(/\D/g,"");
+  const abrir = () => {
+    try { const d = localStorage.getItem("sirius_rastreio_doc"); if (d && !$("#rtDoc").value) $("#rtDoc").value = d; } catch(e){}
+    $("#rtForm").hidden = false; $("#rtPasso2").hidden = true; $("#rtMsg").textContent = "";
+    $("#rtm").classList.add("on"); document.body.classList.add("lock");
+    setTimeout(()=>($("#rtDoc").value ? $("#rtNf") : $("#rtDoc")).focus(), 50);
+  };
+  const fechar = () => { $("#rtm").classList.remove("on"); if (!$("#drawer").classList.contains("on") && !$("#prm").classList.contains("on")) document.body.classList.remove("lock"); if (location.hash === "#rastreio") history.replaceState(null, "", location.pathname + location.search); };
+  $("#rtAbrir").addEventListener("click", abrir);
+  $("#rtRodape").addEventListener("click", e => { e.preventDefault(); abrir(); });
+  if (location.hash === "#rastreio") abrir();
+  window.addEventListener("hashchange", () => { if (location.hash === "#rastreio") abrir(); });
+  $("#rtm").addEventListener("click", e => { if (e.target.closest("[data-rtfechar]")) fechar(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#rtm").classList.contains("on")) fechar(); });
+  $("#rtForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const doc = so($("#rtDoc").value), nf = so($("#rtNf").value);
+    if (doc.length !== 11 && doc.length !== 14) { $("#rtMsg").textContent = "Confira o CPF (11 números) ou CNPJ (14 números)."; $("#rtDoc").focus(); return; }
+    if (!nf) { $("#rtMsg").textContent = "Informe o número da nota fiscal."; $("#rtNf").focus(); return; }
+    try { localStorage.setItem("sirius_rastreio_doc", doc); } catch(e){}
+    $("#rtDocV").textContent = doc; $("#rtNfV").textContent = nf;
+    $("#rtMsg").textContent = ""; $("#rtForm").hidden = true; $("#rtPasso2").hidden = false;
+  });
+  $("#rtVoltar").addEventListener("click", () => { $("#rtForm").hidden = false; $("#rtPasso2").hidden = true; });
+  $("#rtPasso2").addEventListener("click", async e => {
+    const b = e.target.closest("[data-rtcopia]"); if (!b) return;
+    const t = document.getElementById(b.dataset.rtcopia).textContent;
+    try { await navigator.clipboard.writeText(t); b.textContent = "Copiado"; setTimeout(()=>{ b.textContent = "Copiar"; }, 1800); }
+    catch(err){ const r = document.createRange(); r.selectNodeContents(document.getElementById(b.dataset.rtcopia)); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); b.textContent = "Selecionado"; }
+  });
 })();
 </script>
 </body>

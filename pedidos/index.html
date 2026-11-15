@@ -50,6 +50,10 @@ ol.tl li.a{color:var(--text);font-weight:800}ol.tl li.a::before{box-shadow:0 0 0
 .prazo b{color:var(--text)}
 .sair{background:none;border:0;font:inherit;font-size:13px;font-weight:600;color:var(--safira);cursor:pointer;text-decoration:underline}
 @media (max-width:480px){h1{font-size:26px}ol.tl li{font-size:10.5px;padding-left:2px;padding-right:2px}.card{padding:16px}}
+.rt{border-top:1px solid #e6ddd0;margin-top:8px;padding-top:10px;display:grid;gap:6px}
+.rtl{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.cp{border:1px solid #d9cdbd;background:#fff;border-radius:999px;padding:4px 12px;font:700 12.5px inherit;cursor:pointer}
+.rtb{display:block;text-align:center;background:#0b5a2e;color:#fff;font-weight:700;padding:12px;border-radius:10px;text-decoration:none;margin-top:4px}
 </style>
 </head>
 <body>
@@ -82,6 +86,17 @@ const dt=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||"");return m?`${m[3]}/${
 const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
 const unb=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 async function dk(seg,sal,bits){const te=new TextEncoder();const k=await crypto.subtle.importKey("raw",te.encode(seg),"PBKDF2",false,["deriveBits"]);return crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:te.encode(sal),iterations:200000},k,bits)}
+// Rastreio na transportadora: mostra o CPF/CNPJ e a nota prontos para copiar, e o link do site da Princesa dos Campos.
+let docAtual="";
+const RT="https://encomendas.princesadoscampos.com.br/";
+function rastreio(p){
+  const nf=String(p.nf||p.notaFiscal||"").replace(/\D/g,"");
+  return `<div class="rt"><p><b>Rastrear entrega</b> · na página da transportadora, em “Rastrear entrega”, cole:</p>
+    <p class="rtl">CPF/CNPJ: <b>${esc(docAtual)}</b> <button type="button" class="cp" data-c="${esc(docAtual)}">Copiar</button></p>
+    ${nf?`<p class="rtl">Nota fiscal nº: <b>${esc(nf)}</b> <button type="button" class="cp" data-c="${esc(nf)}">Copiar</button></p>`:`<p class="rtl">Nota fiscal nº: use o número da nota que veio com o pedido.</p>`}
+    <a class="rtb" href="${RT}" target="_blank" rel="noopener">Abrir rastreio da Princesa dos Campos</a></div>`;
+}
+document.addEventListener("click",async e=>{const b=e.target.closest(".cp");if(!b)return;try{await navigator.clipboard.writeText(b.dataset.c);b.textContent="Copiado";setTimeout(()=>{b.textContent="Copiar"},1800)}catch(_){}});
 function card(p){
   const i=E.indexOf(p.status),canc=p.status==="cancelado";
   const tl=canc?"":`<ol class="tl">${CURTO.map((t,k)=>`<li class="${k<=i?"f":""} ${k===i?"a":""}">${t}</li>`).join("")}</ol>`;
@@ -90,6 +105,7 @@ function card(p){
   if(p.transportadora)inf.push(`<p><b>Transportadora:</b> ${esc(p.transportadora)}</p>`);
   if(p.rastreio)inf.push(`<p><b>Rastreio:</b> ${esc(p.rastreio)}</p>`);
   if(p.obs)inf.push(`<p>${esc(p.obs)}</p>`);
+  if(p.status==="enviado_transportadora")inf.push(rastreio(p));
   if(!canc&&p.status!=="enviado_transportadora")inf.push(`<p class="prazo">${PRAZO}</p>`);
   const cl=p.status==="enviado_transportadora"?"ok":canc?"x":"";
   return `<article class="card"><div class="ptop"><b>Pedido nº ${esc(p.n)}</b><span>${dt(p.data)}</span></div><span class="selo ${cl}">${esc(NOME[p.status]||p.status)}</span>${tl}${inf.length?`<div class="info">${inf.join("")}</div>`:""}</article>`;
@@ -103,7 +119,7 @@ function mostra(d){
 }
 $("f").addEventListener("submit",async ev=>{
   ev.preventDefault();$("m").textContent="";
-  const doc=$("doc").value.replace(/\D/g,""),cod=$("cod").value.trim().toUpperCase();
+  const doc=$("doc").value.replace(/\D/g,"");docAtual=doc;const cod=$("cod").value.trim().toUpperCase();
   if(doc.length!==14&&doc.length!==11){$("m").textContent="Confira o CNPJ ou CPF informado.";return}
   $("b").disabled=true;$("b").textContent="Consultando…";
   try{
