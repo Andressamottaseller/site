@@ -67,18 +67,17 @@ ol.tl li.a{color:var(--text);font-weight:800}ol.tl li.a::before{box-shadow:0 0 0
 
   <form class="card" id="f" autocomplete="on">
     <label>CNPJ ou CPF<input id="doc" inputmode="numeric" autocomplete="username" placeholder="Somente os números ou com pontuação" required></label>
-    <label>Código de acesso<input id="cod" type="password" autocomplete="current-password" placeholder="Código enviado pela Sirius" required></label>
     <button class="btn" id="b">Ver meus pedidos</button>
     <p class="msg" id="m" role="alert"></p>
-    <p class="ajuda">Ainda não tem seu código? <a class="lnk" target="_blank" rel="noopener" href="https://wa.me/5545999547991?text=Ol%C3%A1!%20Quero%20meu%20c%C3%B3digo%20de%20acesso%20para%20acompanhar%20meus%20pedidos.">Peça pelo WhatsApp</a>.</p>
+    <p class="ajuda">Use o mesmo CNPJ ou CPF informado no pedido. Dúvidas? <a class="lnk" target="_blank" rel="noopener" href="https://wa.me/5545999547991?text=Ol%C3%A1!%20Quero%20saber%20sobre%20meu%20pedido.">Fale pelo WhatsApp</a>.</p>
   </form>
 
   <section id="r" hidden></section>
 </main>
 <script>
-const E=["aguardando_pagamento","pagamento_confirmado","em_separacao","enviado_transportadora"];
-const NOME={aguardando_pagamento:"Aguardando pagamento",pagamento_confirmado:"Pagamento confirmado",em_separacao:"Em separação",enviado_transportadora:"Enviado à transportadora",cancelado:"Cancelado"};
-const CURTO=["Aguardando pagamento","Pagamento confirmado","Em separação","Na transportadora"];
+const E=["aguardando_fechamento","aguardando_pagamento","pagamento_confirmado","em_separacao","enviado_transportadora"];
+const NOME={aguardando_fechamento:"Aguardando fechamento do pedido",aguardando_pagamento:"Aguardando pagamento",pagamento_confirmado:"Pagamento confirmado",em_separacao:"Em separação",enviado_transportadora:"Enviado à transportadora",cancelado:"Cancelado"};
+const CURTO=["Fechando pedido","Aguardando pagamento","Pagamento confirmado","Em separação","Na transportadora"];
 const PRAZO="Após a finalização do pedido, o envio à transportadora ocorre em até <b>48 horas</b>. Em períodos de alta demanda, pode levar até <b>3 dias</b>. Catástrofes climáticas podem alterar esse prazo.";
 const $=i=>document.getElementById(i);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -106,7 +105,8 @@ function card(p){
   if(p.rastreio)inf.push(`<p><b>Rastreio:</b> ${esc(p.rastreio)}</p>`);
   if(p.obs)inf.push(`<p>${esc(p.obs)}</p>`);
   if(p.status==="enviado_transportadora")inf.push(rastreio(p));
-  if(!canc&&p.status!=="enviado_transportadora")inf.push(`<p class="prazo">${PRAZO}</p>`);
+  if(p.status==="aguardando_fechamento")inf.push(`<p class="prazo">Seu pedido ainda está aberto. O prazo de envio de <b>48 horas</b> começa quando ele for fechado.</p>`);
+  else if(!canc&&p.status!=="enviado_transportadora")inf.push(`<p class="prazo">${PRAZO}</p>`);
   const cl=p.status==="enviado_transportadora"?"ok":canc?"x":"";
   return `<article class="card"><div class="ptop"><b>Pedido nº ${esc(p.n)}</b><span>${dt(p.data)}</span></div><span class="selo ${cl}">${esc(NOME[p.status]||p.status)}</span>${tl}${inf.length?`<div class="info">${inf.join("")}</div>`:""}</article>`;
 }
@@ -115,17 +115,17 @@ function mostra(d){
   const q=L.length;
   $("r").innerHTML=`<div class="resumo"><div><h2>${esc(d.cliente||"Seus pedidos")}</h2><span class="tot">${q===1?"1 pedido realizado":q+" pedidos realizados"}</span></div><button class="sair" id="s">Sair</button></div>`+(q?L.map(card).join(""):`<div class="card">Nenhum pedido registrado ainda.</div>`)+(d.atualizado?`<p class="ajuda">Atualizado em ${dt(d.atualizado)}.</p>`:"");
   $("f").hidden=true;$("r").hidden=false;
-  $("s").onclick=()=>{$("r").hidden=true;$("r").innerHTML="";$("cod").value="";$("f").hidden=false};
+  $("s").onclick=()=>{$("r").hidden=true;$("r").innerHTML="";$("f").hidden=false};
 }
 $("f").addEventListener("submit",async ev=>{
   ev.preventDefault();$("m").textContent="";
-  const doc=$("doc").value.replace(/\D/g,"");docAtual=doc;const cod=$("cod").value.trim().toUpperCase();
+  const doc=$("doc").value.replace(/\D/g,"");docAtual=doc;
   if(doc.length!==14&&doc.length!==11){$("m").textContent="Confira o CNPJ ou CPF informado.";return}
   $("b").disabled=true;$("b").textContent="Consultando…";
   try{
-    const seg=doc+"|"+cod,id=hex(await dk(seg,"sirius-pedidos-id",128));
+    const seg=doc,id=hex(await dk(seg,"sirius-pedidos-id",128));
     const r=await fetch("d/"+id+".json?x="+Date.now(),{cache:"no-store"});
-    if(r.status===404){$("m").textContent="CNPJ/CPF ou código incorretos.";return}
+    if(r.status===404){$("m").textContent="Ainda não há pedidos para este CNPJ/CPF. Se você fez um pedido agora, ele aparece aqui assim que for registrado.";return}
     if(!r.ok)throw 0;
     const o=await r.json(),k=await crypto.subtle.importKey("raw",await dk(seg,"sirius-pedidos-key",256),"AES-GCM",false,["decrypt"]);
     mostra(JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:"AES-GCM",iv:unb(o.iv)},k,unb(o.d)))));
