@@ -308,6 +308,17 @@ body.comcarrinho footer{padding-bottom:80px}
 .lanc .lp{font-size:26px;font-weight:800;color:#C8A24A;white-space:nowrap}
 .lanc .lb{background:#C8A24A;color:#0B0B0F;border:0;padding:10px 16px;border-radius:4px;font-weight:800;cursor:pointer;font-size:13px}
 @media(max-width:640px){.lanc .wrap{gap:10px}.lanc img{width:60px;height:60px}.lanc .ln{font-size:17px}.lanc .ls{display:none}.lanc .lt{font-size:9.5px;letter-spacing:2px}.lanc .lp{font-size:19px}.lanc .lb{display:none}}
+.lpop{position:fixed;inset:0;z-index:200;background:rgba(11,11,15,.78);display:none;align-items:center;justify-content:center;padding:16px}
+.lpop.on{display:flex}
+.lpop .lbox{position:relative;background:linear-gradient(160deg,#0B0B0F 0%,#0F2A5F 100%);border:1px solid rgba(200,162,74,.6);border-radius:10px;max-width:520px;width:100%;max-height:94vh;overflow:auto;text-align:center;padding:18px 18px 20px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.lpop .lbox img{width:100%;height:auto;border-radius:8px;display:block;background:#fff}
+.lpop .lt{display:block;margin:14px 0 4px;font-size:12px;letter-spacing:3px;color:#C8A24A;font-weight:700;text-transform:uppercase}
+.lpop .ln{font-family:'Playfair Display',serif;font-size:30px;color:#fff;line-height:1.1}
+.lpop .ls{color:#E7D7C6;font-size:13.5px;margin-top:4px}
+.lpop .lp{font-size:34px;font-weight:800;color:#C8A24A;margin:8px 0 12px}
+.lpop .lb{background:#C8A24A;color:#0B0B0F;border:0;padding:13px 26px;border-radius:4px;font-weight:800;font-size:15px;cursor:pointer}
+.lpop .lx{position:absolute;top:8px;right:8px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(200,162,74,.6);background:#0B0B0F;color:#C8A24A;font-size:22px;line-height:1;cursor:pointer;z-index:2}
+@media(max-width:640px){.lpop .ln{font-size:24px}.lpop .lp{font-size:28px}}
 </style>
 </head>
 <body>
@@ -997,6 +1008,29 @@ renderFilters(); renderGrid(); renderCart();
     try { await navigator.clipboard.writeText(t); b.textContent = "Copiado"; setTimeout(()=>{ b.textContent = "Copiar"; }, 1800); }
     catch(err){ const r = document.createRange(); r.selectNodeContents(document.getElementById(b.dataset.rtcopia)); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); b.textContent = "Selecionado"; }
   });
+})();
+</script>
+<div class="lpop" id="lancPop" role="dialog" aria-modal="true" aria-label="Lançamento exclusivo Bidaya Be Jealous">
+  <div class="lbox">
+    <button class="lx" type="button" id="lancPopX" aria-label="Fechar">×</button>
+    <img src="img/bidaya-be-jealous.jpg?v=eb8aae2d" alt="Bidaya Be Jealous Eau de Parfum 100ML">
+    <span class="lt">Lançamento exclusivo Sírius Perfumaria</span>
+    <div class="ln">Bidaya Be Jealous</div>
+    <div class="ls">Eau de Parfum · 100ML</div>
+    <div class="lp">R$ 389</div>
+    <button class="lb" type="button" id="lancPopVer">Ver e comprar</button>
+  </div>
+</div>
+<script>
+(function(){
+  var pop=document.getElementById("lancPop"); if(!pop) return;
+  function fechar(){ pop.classList.remove("on"); }
+  var visto=false; try{ visto=sessionStorage.getItem("lancPopVisto")==="bidaya-be-jealous"; }catch(e){}
+  if(!visto){ setTimeout(function(){ pop.classList.add("on"); try{ sessionStorage.setItem("lancPopVisto","bidaya-be-jealous"); }catch(e){} },600); }
+  document.getElementById("lancPopX").addEventListener("click",fechar);
+  pop.addEventListener("click",function(e){ if(e.target===pop) fechar(); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape") fechar(); });
+  document.getElementById("lancPopVer").addEventListener("click",function(){ fechar(); if(typeof openModal==="function") openModal("bidaya-be-jealous"); });
 })();
 </script>
 </body>
