@@ -74,7 +74,10 @@ header{position:sticky;top:0;z-index:30;background:var(--ink);color:#fff;border-
 .badge.promo{background:var(--red);color:#fff}
 .badge.esg{background:#777;color:#fff}
 .badge.ce{background:#C8A24A;color:#0B0B0F}
-.celine{font-size:12px;font-weight:700;color:#8a6a1f;margin-top:4px}
+.celine{display:block;margin-top:6px;padding:6px 8px;border-radius:6px;background:#d62828;color:#fff;font-size:12px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;text-align:center;line-height:1.25;box-shadow:0 0 0 2px rgba(214,40,40,.25);animation:cePulse 1.6s ease-in-out infinite}
+.celine::before{content:"⚠ "}
+@keyframes cePulse{0%,100%{box-shadow:0 0 0 2px rgba(214,40,40,.25)}50%{box-shadow:0 0 0 5px rgba(214,40,40,.45)}}
+@media (prefers-reduced-motion:reduce){.celine{animation:none}}
 .gen{position:absolute;top:10px;right:10px;font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:999px;background:#f4efe6;color:var(--gold-dark)}
 .pbody{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px;flex:1}
 .brand{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)}
