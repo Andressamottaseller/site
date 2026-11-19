@@ -799,7 +799,7 @@ $("#sendWa").onclick=()=>{
   m += `*Pagamento:* ${v("fPag")}\n\n*Itens:*\n`;
   for(const id in cart){ const p=byId[id]; const u=precoQtd(p,cart[id]); m += `• ${cart[id]}x ${p.n} — ${brl(u)}${u<p.p?` (desconto ${cart[id]} un; tabela ${brl(p.p)})`:""} = ${brl(u*cart[id])}\n`; }
   const fr=frete(t);
-  m += `\n*Produtos:* ${brl(t)} (${n} peças)\n*Frete (${LOJA.fretePercentual}%):* ${brl(fr)}\n*Total: ${brl(t+fr)}*\n`;
+  m += `\n*Produtos:* ${brl(t)} (${n} peças)\n*Frete (${LOJA.fretePercentual}%):* ${brl(fr)}\n*Total: ${brl(t+fr)}*\n*Quantidade:* ${Object.keys(cart).length} ${Object.keys(cart).length===1?"produto":"produtos"} · ${n} ${n===1?"peça":"peças"}\n`;
   if(v("fObs")) m += `\n*Obs.:* ${v("fObs")}\n`;
   m += `\n_Tabela de ${LOJA.atualizadoEm}. Aguardo confirmação de estoque e valores._`;
   window.open(waLink(m),"_blank");
