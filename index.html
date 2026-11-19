@@ -654,7 +654,7 @@ function lista(){
   return l;
 }
 function card(p){
-  const badge = p.e? `<span class="badge esg">Esgotado</span>` : p.ce? `<span class="badge ce">Consultar estoque</span>` : p.o? `<span class="badge promo">-${Math.round((1-p.p/p.o)*100)}%</span>` : "";
+  const badge = p.e? `<span class="badge esg">Esgotado</span>` : p.o? `<span class="badge promo">-${Math.round((1-p.p/p.o)*100)}%</span>` : "";
   const img = p.f? `<img src="${esc(p.f)}" alt="${esc(p.n)}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ph',textContent:'${esc((p.m||p.n).charAt(0))}'}))">` : `<span class="ph">${esc((p.m||p.n).charAt(0))}</span>`;
   return `<article class="card">
     <div class="pimg" data-open="${p.id}">${img}${badge}${p.g?`<span class="gen">${esc(p.g)}</span>`:""}</div>
