@@ -240,6 +240,10 @@ footer .selo b{display:block;font-size:16px;margin:2px 0;text-transform:uppercas
 .pdia-c .pn{font-size:12px;line-height:1.25;height:45px;overflow:hidden;margin:2px 0 6px}
 .pdia-c .po{font-size:12px;color:var(--muted);text-decoration:line-through;margin-top:auto}
 .pdia-c .pp{font-size:18px;font-weight:800;color:var(--red);line-height:1.15}
+.pdia-ce{font-style:normal;background:#ffd23f;color:#7a1712;font-weight:900;font-size:13px;letter-spacing:.4px;text-transform:uppercase;padding:4px 10px;border-radius:999px;animation:cePulseY 1.6s ease-in-out infinite}
+@keyframes cePulseY{0%,100%{box-shadow:0 0 0 0 rgba(255,210,63,.6)}50%{box-shadow:0 0 0 5px rgba(255,210,63,0)}}
+.pdia-c .pce{margin-top:5px;background:#d62828;color:#fff;font-size:10px;font-weight:800;text-transform:uppercase;text-align:center;border-radius:5px;padding:3px 4px;line-height:1.2}
+@media (prefers-reduced-motion:reduce){.pdia-ce{animation:none}}
 
 /* ---------- pedido rápido e barra do carrinho ---------- */
 .prf{background:var(--safira);color:#fff}
@@ -394,7 +398,7 @@ const _agoraPromo=Date.now();PRODUTOS.forEach(p=>{if(p.o&&!(p.pu>_agoraPromo)){i
 
 <section class="pdia" id="pdia" hidden aria-label="Promoções do dia">
   <div class="wrap">
-    <div class="pdia-t"><b>🔥 PROMOÇÕES DO DIA</b><span>Válidas até as 08:00 · enquanto durarem os estoques</span></div>
+    <div class="pdia-t"><b>🔥 PROMOÇÕES DO DIA</b><span>Válidas até as 08:00 · enquanto durarem os estoques</span><em class="pdia-ce">⚠ Consultar estoque com o vendedor</em></div>
     <div class="pdia-l" id="pdiaL"></div>
   </div>
 </section>
@@ -634,7 +638,7 @@ if (LOJA.banner.ativo){
 (function(){
   const L=PRODUTOS.filter(p=>p.pd&&p.o>p.p&&!p.e).sort((a,b)=>(1-a.p/a.o<1-b.p/b.o)?1:-1);
   if(!L.length) return;
-  $("#pdiaL").innerHTML=L.map(p=>`<div class="pdia-c" role="button" tabindex="0" data-open="${p.id}"><span class="pc">-${Math.round((1-p.p/p.o)*100)}%</span><img src="${esc(p.f)}" alt="${esc(p.n)}" loading="lazy"><span class="pm">${esc(p.m||"")}</span><span class="pn">${esc(p.n)}</span><span class="po">De ${brl(p.o)}</span><span class="pp">${brl(p.p)}</span></div>`).join("");
+  $("#pdiaL").innerHTML=L.map(p=>`<div class="pdia-c" role="button" tabindex="0" data-open="${p.id}"><span class="pc">-${Math.round((1-p.p/p.o)*100)}%</span><img src="${esc(p.f)}" alt="${esc(p.n)}" loading="lazy"><span class="pm">${esc(p.m||"")}</span><span class="pn">${esc(p.n)}</span><span class="po">De ${brl(p.o)}</span><span class="pp">${brl(p.p)}</span>${p.ce?`<span class="pce">⚠ Consultar estoque</span>`:""}</div>`).join("");
   $("#pdia").hidden=false;
 })();
 $("#bMeta").textContent = `Tabela atualizada em ${LOJA.atualizadoEm} · ${PRODUTOS.length} produtos · Pedido mínimo: ${LOJA.pedidoMinimoPecas} peças`;
