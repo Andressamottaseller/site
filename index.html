@@ -495,7 +495,7 @@ const _agoraPromo=Date.now();PRODUTOS.forEach(p=>{if(p.o&&!(p.pu>_agoraPromo)){i
         </div>
       </div>
     </div>
-    <p class="copy">Preços sujeitos a alteração sem aviso prévio e à confirmação de estoque. Os nomes, descrições e imagens dos produtos podem conter erros de digitação ou diferenças em relação ao produto. Consulte o vendedor antes de finalizar a compra. Frete aproximado: 8% do valor da compra. © <span id="yr"></span> Sirius Perfumaria Atacado.</p>
+    <p class="copy">Preços sujeitos a alteração sem aviso prévio e à confirmação de estoque. Os nomes, descrições e imagens dos produtos podem conter erros de digitação ou diferenças em relação ao produto. Consulte o vendedor antes de finalizar a compra. Frete aproximado: 8% do valor da compra; o valor exato do frete é repassado após o envio para a transportadora. © <span id="yr"></span> Sirius Perfumaria Atacado.</p>
   </div>
 </footer>
 
@@ -528,6 +528,7 @@ const _agoraPromo=Date.now();PRODUTOS.forEach(p=>{if(p.o&&!(p.pu>_agoraPromo)){i
   <div class="dfoot">
     <div class="sub"><span>Produtos (<span id="itemsN">0</span> peças)</span><span id="subtotal">R$ 0,00</span></div>
     <div class="sub"><span>Frete aproximado (<span id="fretePct">8</span>% da compra)</span><span id="frete">R$ 0,00</span></div>
+    <div class="sub" style="font-size:11.5px;opacity:.8;margin-top:-4px"><span>Valor exato do frete repassado após o envio para a transportadora.</span></div>
     <div class="tot"><span>Total</span><b id="total">R$ 0,00</b></div>
     <div class="minbar"><i id="minFill" style="width:0"></i></div>
     <div class="warn" id="warn"></div>
@@ -833,7 +834,7 @@ $("#sendWa").onclick=()=>{
   m += `*Pagamento:* ${v("fPag")}\n\n*Itens:*\n`;
   for(const id in cart){ const p=byId[id]; const u=precoQtd(p,cart[id]); m += `• ${cart[id]}x ${p.n} — ${brl(u)}${u<p.p?` (desconto ${cart[id]} un; tabela ${brl(p.p)})`:""} = ${brl(u*cart[id])}${p.ce?" (consultar estoque)":""}\n`; }
   const fr=frete(t);
-  m += `\n*Produtos:* ${brl(t)} (${n} peças)\n*Frete aproximado (${LOJA.fretePercentual}% da compra):* ${brl(fr)}\n*Total: ${brl(t+fr)}*\n*Quantidade:* ${Object.keys(cart).length} ${Object.keys(cart).length===1?"produto":"produtos"} · ${n} ${n===1?"peça":"peças"}\n`;
+  m += `\n*Produtos:* ${brl(t)} (${n} peças)\n*Frete aproximado (${LOJA.fretePercentual}% da compra):* ${brl(fr)} _(valor exato repassado após o envio para a transportadora)_\n*Total: ${brl(t+fr)}*\n*Quantidade:* ${Object.keys(cart).length} ${Object.keys(cart).length===1?"produto":"produtos"} · ${n} ${n===1?"peça":"peças"}\n`;
   if(v("fObs")) m += `\n*Obs.:* ${v("fObs")}\n`;
   m += `\n_Tabela de ${LOJA.atualizadoEm}. Aguardo confirmação de estoque e valores._`;
   window.open(waLink(m),"_blank");
